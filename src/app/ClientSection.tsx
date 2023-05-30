@@ -1,14 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function ClientSection() {
   const [loading, setLoading] = useState(false);
-  const [quote, setQuote] = useState(localStorage.getItem("quote") || "");
-  const [customSystemPrompt, setCustomSystemPrompt] = useState(
-    localStorage.getItem("customSystemPrompt") || ""
-  );
-  const [response, setResponse] = useState<String>("");
+  const [quote, setQuote] = useState("");
+  const [customSystemPrompt, setCustomSystemPrompt] = useState("");
+  const [response, setResponse] = useState<String>("Response will be here");
+
+  useEffect(() => {
+    // Check if localStorage is available, if so, set quote and customSystemPrompt
+    if (typeof Storage !== "undefined") {
+      const quote = localStorage.getItem("quote");
+      if (quote) {
+        setQuote(quote);
+      }
+
+      const customSystemPrompt = localStorage.getItem("customSystemPrompt");
+      if (customSystemPrompt) {
+        setCustomSystemPrompt(customSystemPrompt);
+      }
+    }
+  }, []);
 
   const generateResponse = async (prompt: string) => {
     setResponse("");
@@ -88,68 +101,75 @@ export default function ClientSection() {
   };
 
   return (
-    <div className="w-full max-w-xl">
-      {/* <div>Paste your quote here</div> */}
-      <textarea
-        value={quote}
-        onChange={(e) => {
-          setQuote(e.target.value);
-          localStorage.setItem("quote", e.target.value);
-        }}
-        rows={4}
-        // maxLength={200}
-        className="focus:ring-neu w-full rounded-md border border-neutral-400
+    <div className="mx-8 flex w-full flex-row flex-wrap justify-center gap-8">
+      <div className="w-full max-w-xl">
+        <div className="mb-2 font-bold">Paste your quote here</div>
+        <textarea
+          value={quote}
+          onChange={(e) => {
+            setQuote(e.target.value);
+            localStorage.setItem("quote", e.target.value);
+          }}
+          rows={10}
+          // maxLength={200}
+          className="focus:ring-neu w-full rounded-md border border-neutral-400
          p-4 text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:border-neutral-900"
-        placeholder={"No formatting needed"}
-      />
+          placeholder={"No formatting needed"}
+        />
 
-      <button
-        disabled={loading || !quote}
-        className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
-        onClick={(e) => explainQuote(e)}
-      >
-        Explain it to me &rarr;
-      </button>
-      <button
-        disabled={loading || !quote}
-        className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
-        onClick={(e) => judgeQuote(e)}
-      >
-        Is this a fair quote? &rarr;
-      </button>
-      <button
-        disabled={loading || !quote}
-        className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
-        onClick={(e) => listQuestions(e)}
-      >
-        List 5 expert questions &rarr;
-      </button>
-      <button
-        disabled={loading || !customSystemPrompt}
-        className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
-        onClick={(e) => customPromptWithQuote(e)}
-      >
-        Custom &rarr;
-      </button>
-      <textarea
-        value={customSystemPrompt}
-        onChange={(e) => {
-          setCustomSystemPrompt(e.target.value);
-          localStorage.setItem("customSystemPrompt", e.target.value);
-        }}
-        rows={4}
-        maxLength={400}
-        className="focus:ring-neu w-full rounded-md border border-neutral-400
+        <button
+          disabled={loading || !quote}
+          className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
+          onClick={(e) => explainQuote(e)}
+        >
+          Explain it to me &rarr;
+        </button>
+        <button
+          disabled={loading || !quote}
+          className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
+          onClick={(e) => judgeQuote(e)}
+        >
+          Is this a fair quote? &rarr;
+        </button>
+        <button
+          disabled={loading || !quote}
+          className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
+          onClick={(e) => listQuestions(e)}
+        >
+          List 5 expert questions &rarr;
+        </button>
+        <button
+          disabled={loading || !customSystemPrompt}
+          className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
+          onClick={(e) => customPromptWithQuote(e)}
+        >
+          Custom &rarr;
+        </button>
+        <textarea
+          value={customSystemPrompt}
+          onChange={(e) => {
+            setCustomSystemPrompt(e.target.value);
+            localStorage.setItem("customSystemPrompt", e.target.value);
+          }}
+          rows={4}
+          maxLength={400}
+          className="focus:ring-neu w-full rounded-md border border-neutral-400
          p-4 text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:border-neutral-900"
-        placeholder={
-          "This is the behind-the-scenes prompt that the AI will use to generate a response."
-        }
-      />
-      {response && (
-        <div className="mt-8 rounded-xl border bg-white p-4 text-black shadow-md transition hover:bg-gray-100">
-          {response}
+          placeholder={
+            "This is the behind-the-scenes prompt that the AI will use to generate a response."
+          }
+        />
+      </div>
+      <div className="w-full max-w-xl">
+        <div className="mb-2 font-bold">
+          Response {loading ? "loading..." : ""}
         </div>
-      )}
+        {response && (
+          <div className="rounded-xl border bg-white p-4 text-black shadow-md transition hover:bg-gray-100">
+            {response}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
