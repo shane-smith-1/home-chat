@@ -65,7 +65,7 @@ export default function ClientSection() {
     setResponse("");
     setLoading(true);
     const prompt =
-      "Is this a fair quote? Anything else I should consider? Please skip all precations, warnings, and caviats. Pretend you are an expert in home repair, construction, hvac, insulation, and plumbing.";
+      "Is this a fair quote? Anything else I should consider? Please skip all precations, warnings, and caviats. Pretend you are an expert in home repair, construction, hvac, insulation, and plumbing. Skip anything that is broadly relevant to any homeowner going through this process. As, skip the 'should check with local codes' bla bla bla. Add a newline after each question.";
     await generateResponse(getQuotePromptInput(prompt));
   };
 
@@ -83,7 +83,7 @@ export default function ClientSection() {
     setResponse("");
     setLoading(true);
     const prompt =
-      "List 5 questions an expert with an eye for detail may have for the contractor about this quote? Consider this expert an advocate for this homeowner. Newline after each.";
+      "List 5 questions an expert with an eye for detail may have for the contractor about this quote? Consider this expert an advocate for this homeowner. Newline after each question using &#013; &#010;.";
     await generateResponse(getQuotePromptInput(prompt));
   };
 
@@ -146,7 +146,7 @@ export default function ClientSection() {
         }
       />
       {response && (
-        <div className="mt-8 rounded-xl border bg-white p-4 shadow-md transition hover:bg-gray-100">
+        <div className="mt-8 rounded-xl border bg-white p-4 text-black shadow-md transition hover:bg-gray-100">
           {response}
         </div>
       )}
