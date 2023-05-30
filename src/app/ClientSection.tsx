@@ -82,6 +82,15 @@ export default function ClientSection() {
     await generateResponse(getQuotePromptInput(prompt));
   };
 
+  const evalEfficiency = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setResponse("");
+    setLoading(true);
+    const prompt =
+      "How energy and monthly bill efficient is the appliance(s) quoted going to be, compared to other options? The quote might not talk about efficiency, but use the context of what is going to installed to determine. Suggest more green and/or energy efficient alternatives if possible. Be specific. For example, talk about how a heat pump solution is probably going to cost less long-term.";
+    await generateResponse(getQuotePromptInput(prompt));
+  };
+
   const customPromptWithQuote = async (
     e: React.MouseEvent<HTMLButtonElement>
   ) => {
@@ -100,9 +109,12 @@ export default function ClientSection() {
     await generateResponse(getQuotePromptInput(prompt));
   };
 
+  // Remove &#013; &#010 from the end of the response if present.
+  const responseTrimmed = response.replace(/&#013; &#010;$/, "");
+
   return (
     <div className="mx-8 flex w-full flex-row flex-wrap justify-center gap-8">
-      <div className="w-full max-w-xl">
+      <div className="mx-3 w-full max-w-xl">
         <div className="mb-2 font-bold">Paste your quote here</div>
         <textarea
           value={quote}
@@ -139,6 +151,13 @@ export default function ClientSection() {
           List 5 expert questions &rarr;
         </button>
         <button
+          disabled={loading || !quote}
+          className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
+          onClick={(e) => evalEfficiency(e)}
+        >
+          How energy efficient is the appliance? &rarr;
+        </button>
+        <button
           disabled={loading || !customSystemPrompt}
           className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
           onClick={(e) => customPromptWithQuote(e)}
@@ -160,13 +179,13 @@ export default function ClientSection() {
           }
         />
       </div>
-      <div className="w-full max-w-xl">
+      <div className="mx-3 w-full max-w-xl">
         <div className="mb-2 font-bold">
           Response {loading ? "loading..." : ""}
         </div>
-        {response && (
+        {responseTrimmed && (
           <div className="rounded-xl border bg-white p-4 text-black shadow-md transition hover:bg-gray-100">
-            {response}
+            {responseTrimmed}
           </div>
         )}
       </div>
