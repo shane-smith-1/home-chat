@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useState } from "react";
+import { form5695 } from "./form5695";
+import classNames from "classnames";
+import Tesseract, { createWorker } from "tesseract.js";
 
 export default function ClientSection() {
   const [loading, setLoading] = useState(false);
   const [quote, setQuote] = useState("");
   const [customSystemPrompt, setCustomSystemPrompt] = useState("");
   const [response, setResponse] = useState<String>("Response will be here");
+  const [imageData, setImageData] = useState<string | null>(null);
+  const [worker, setWorker] = useState<Tesseract.Worker | null>(null);
+  const [progress, setProgress] = useState<number>(0);
 
   useEffect(() => {
     // Check if localStorage is available, if so, set quote and customSystemPrompt
@@ -109,12 +115,100 @@ export default function ClientSection() {
     await generateResponse(getQuotePromptInput(prompt));
   };
 
-  // Remove &#013; &#010 from the end of the response if present.
+  const infoNeededFor5695 = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setResponse("");
+    setLoading(true);
+    const prompt =
+      form5695 +
+      "Fillout this form given the info found in the quote. Output a simple yes and no where possible. Determine the how the job done in the quote fits into items 1-6. Output in JSON with the key being the line number in the form.";
+    // Remove &#013; &#010 from the end of the response if present.
+    await generateResponse(getQuotePromptInput(prompt));
+  };
+
   const responseTrimmed = response.replace(/&#013; &#010;$/, "");
+  // const quoteUploaded =
+  //   document.getElementById("quote-upload") !== null &&
+  //   (document.getElementById("quote-upload") as HTMLInputElement).value !== "";
+
+  useEffect(() => {
+    const makeWorker = async () => {
+      const worker = await createWorker({
+        logger: (m) => {
+          console.log(m);
+          setProgress(Math.round(m.progress * 100));
+        },
+      });
+      setWorker(worker);
+    };
+    makeWorker();
+  }, []);
+
+  const convertImageToText = useCallback(async () => {
+    if (!imageData || !worker) return;
+    await worker.load();
+    await worker.loadLanguage("eng");
+    await worker.initialize("eng");
+    const {
+      data: { text },
+    } = await worker.recognize(imageData);
+    setQuote(text);
+  }, [imageData, worker]);
+
+  useEffect(() => {
+    convertImageToText();
+  }, [convertImageToText, imageData]);
+
+  const handleQuoteUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    // Handle file upload, process text out of image with Tesseract, store to quote variable and localStorage.
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const imageDataUri = reader.result as string;
+      console.log({ imageDataUri });
+      // Save text to quote
+      if (!imageDataUri) return;
+      // convertImageToText();
+
+      setImageData(imageDataUri);
+    };
+    reader.readAsDataURL(file);
+  }, []);
 
   return (
     <div className="mx-8 flex w-full flex-row flex-wrap justify-center gap-8">
       <div className="mx-3 w-full max-w-xl">
+        <input
+          type="file"
+          className="cursor-pointer font-bold"
+          id="quote-upload"
+          name=""
+          onChange={handleQuoteUpload}
+        />
+
+        <button
+          onClick={() => {
+            const inputEl = document.getElementById("quote-upload");
+            if (inputEl) {
+              (inputEl as HTMLInputElement).value = "";
+            }
+          }}
+        >
+          remove
+        </button>
+
+        {progress < 100 && progress > 0 && (
+          <div>
+            <div className="progress-label">Progress ({progress}%)</div>
+            <div className="progress-bar">
+              <div className="progress" style={{ width: `${progress}%` }}></div>
+            </div>
+          </div>
+        )}
+
+        {/* <img id="selected-image" src="" /> */}
+        <div className="my-2 text-center font-bold">or</div>
         <div className="mb-2 font-bold">Paste your quote here</div>
         <textarea
           value={quote}
@@ -158,20 +252,27 @@ export default function ClientSection() {
           How energy efficient is the appliance? &rarr;
         </button>
         <button
+          disabled={loading || !quote}
+          className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
+          onClick={(e) => infoNeededFor5695(e)}
+        >
+          Form 5695 &rarr;
+        </button>
+        <button
           disabled={loading || !customSystemPrompt}
           className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
           onClick={(e) => customPromptWithQuote(e)}
         >
           Custom &rarr;
         </button>
+
         <textarea
           value={customSystemPrompt}
           onChange={(e) => {
             setCustomSystemPrompt(e.target.value);
             localStorage.setItem("customSystemPrompt", e.target.value);
           }}
-          rows={4}
-          maxLength={400}
+          rows={6}
           className="focus:ring-neu w-full rounded-md border border-neutral-400
          p-4 text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:border-neutral-900"
           placeholder={
@@ -184,9 +285,15 @@ export default function ClientSection() {
           Response {loading ? "loading..." : ""}
         </div>
         {responseTrimmed && (
-          <div className="rounded-xl border bg-white p-4 text-black shadow-md transition hover:bg-gray-100">
-            {responseTrimmed}
-          </div>
+          <pre
+            className={classNames(
+              !responseTrimmed.includes("{") && "whitespace-normal"
+            )}
+          >
+            <div className="rounded-xl border bg-white p-4 text-black shadow-md transition hover:bg-gray-100">
+              {responseTrimmed}
+            </div>
+          </pre>
         )}
       </div>
     </div>
