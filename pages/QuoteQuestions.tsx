@@ -1,17 +1,26 @@
 "use client";
 
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
-import { form5695 } from "./form5695";
+import { form5695, instructionsForm5695 } from "../src/utils/form5695";
 import classNames from "classnames";
-import Tesseract, { createWorker } from "tesseract.js";
+import { thingsEligibleForTaxCredit } from "../app/CreditEligible";
+import {
+  twoFourtyVolt,
+  oneTwentyVolt,
+} from "@/utils/eligible_items/electric_hot_water";
+import {
+  gasStorage,
+  gasTankless,
+  gasResiCommercial,
+} from "@/utils/eligible_items/gas_hot_water";
+import useLocalStorage from "use-local-storage";
 
-export default function ClientSection() {
+export default function QuoteQuestions() {
   const [loading, setLoading] = useState(false);
   const [quote, setQuote] = useState("");
   const [customSystemPrompt, setCustomSystemPrompt] = useState("");
   const [response, setResponse] = useState<String>("Response will be here");
   const [imageData, setImageData] = useState<string | null>(null);
-  const [worker, setWorker] = useState<Tesseract.Worker | null>(null);
   const [progress, setProgress] = useState<number>(0);
 
   useEffect(() => {
@@ -29,7 +38,7 @@ export default function ClientSection() {
     }
   }, []);
 
-  const generateResponse = async (prompt: string) => {
+  const generateResponse = async (prompt: string, temperature?: number) => {
     setResponse("");
     setLoading(true);
 
@@ -40,6 +49,7 @@ export default function ClientSection() {
       },
       body: JSON.stringify({
         prompt,
+        temperature,
       }),
     });
 
@@ -57,44 +67,49 @@ export default function ClientSection() {
     const decoder = new TextDecoder();
     let done = false;
 
+    let res = "";
     while (!done) {
       const { value, done: doneReading } = await reader.read();
       done = doneReading;
       const chunkValue = decoder.decode(value);
       setResponse((prev) => prev + chunkValue);
+      res += chunkValue;
     }
     setLoading(false);
+    return res;
+  };
+
+  const askQuestion = async (
+    e: React.MouseEvent<HTMLButtonElement>,
+    question: string,
+    temperature?: number
+  ) => {
+    e.preventDefault();
+    setResponse("");
+    setLoading(true);
+    return await generateResponse(question, temperature);
   };
 
   const getQuotePromptInput = (prompt: string) => {
-    return `<start home repair quote> ${quote} <end home repair quote> prompt: ${prompt} Max 500 chars. Assume normal home water and hvac usage. Skip all precations and warnings possible.`;
+    return `<start home repair quote> ${quote} <end home repair quote> prompt: ${prompt} Skip all precations and warnings that you can.`;
   };
 
   const explainQuote = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    setResponse("");
-    setLoading(true);
     const prompt =
       "Explain the home repair quote above in simple terms to the owner of the home.";
-    await generateResponse(getQuotePromptInput(prompt));
+    askQuestion(e, getQuotePromptInput(prompt));
   };
 
   const judgeQuote = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    setResponse("");
-    setLoading(true);
     const prompt =
-      "Is this a fair quote? Anything else I should consider? Please skip all precations, warnings, and caviats. Pretend you are an expert in home repair, construction, hvac, insulation, and plumbing. Skip anything that is broadly relevant to any homeowner going through this process. As, skip the 'should check with local codes' bla bla bla. Add a newline after each question.";
-    await generateResponse(getQuotePromptInput(prompt));
+      "Is this a fair quote? Anything else I should consider? Add a newline after each question.";
+    askQuestion(e, getQuotePromptInput(prompt));
   };
 
   const evalEfficiency = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    setResponse("");
-    setLoading(true);
     const prompt =
       "How energy and monthly bill efficient is the appliance(s) quoted going to be, compared to other options? The quote might not talk about efficiency, but use the context of what is going to installed to determine. Suggest more green and/or energy efficient alternatives if possible. Be specific. For example, talk about how a heat pump solution is probably going to cost less long-term.";
-    await generateResponse(getQuotePromptInput(prompt));
+    askQuestion(e, getQuotePromptInput(prompt));
   };
 
   const customPromptWithQuote = async (
@@ -103,61 +118,68 @@ export default function ClientSection() {
     e.preventDefault();
     setResponse("");
     setLoading(true);
-    await generateResponse(getQuotePromptInput(customSystemPrompt));
+    askQuestion(e, getQuotePromptInput(customSystemPrompt));
   };
 
   const listQuestions = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    setResponse("");
-    setLoading(true);
     const prompt =
-      "List 5 questions an expert with an eye for detail may have for the contractor about this quote? Consider this expert an advocate for this homeowner. Newline after each question using &#013; &#010;.";
-    await generateResponse(getQuotePromptInput(prompt));
+      "List 5 questions an expert with an eye for detail would ask the contractor about this quote? Be as pointed as possible. Newline after each question.";
+    askQuestion(e, getQuotePromptInput(prompt));
   };
 
   const infoNeededFor5695 = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    setResponse("");
-    setLoading(true);
     const prompt =
       form5695 +
-      "Fillout this form given the info found in the quote. Output a simple yes and no where possible. Determine the how the job done in the quote fits into items 1-6. Output in JSON with the key being the line number in the form.";
-    // Remove &#013; &#010 from the end of the response if present.
-    await generateResponse(getQuotePromptInput(prompt));
+      instructionsForm5695 +
+      "Fillout this form given the info found in the quote. Output a simple yes and no where possible. Assume no prior work to the home this tax year. Output in JSON with the key being the line number in the form.";
+    askQuestion(e, getQuotePromptInput(prompt));
+  };
+
+  const listAllThings = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    const prompt = `You are going to return a valid JSON object, starting with a { and ending with a }. It will contain an items array. For the included quote, find and return all work items that possibly fit into one of these categories: <categories>${thingsEligibleForTaxCredit
+      .join(" - ")
+      .trim()}<end categories>.
+      
+    Ignore things that are not relevant, like credit cards, addresses, small parts and accesories, labor, fees, taxes, disconts, financing stuff, paint, drywall work.
+    
+    For each item found, include in items an object with the following format. For any field that is not available, leave it blank, don't guess. If quantity is not available, assume 1.
+    
+    Format:
+    {
+      make: string (sometimes called brand or manufacture),
+      make_full: string (if make is an abbreviation, attempt to find the full brand name),
+      model: string,
+      price: number,
+      quantity: number,
+      category: string, (the category of item matched in <categories> list)
+      category_confidence: number, (how confident are you that this item is in the category above, between 0.00-1.00)
+    }
+    `;
+    const listOfItems = await askQuestion(e, getQuotePromptInput(prompt), 0);
+    if (!listOfItems) return;
+    const parsed = JSON.parse("{" + listOfItems);
+    // For each items in the list, search the following arrays for a match of model.
+    const toSearch = [
+      twoFourtyVolt,
+      oneTwentyVolt,
+      gasStorage,
+      gasTankless,
+      gasResiCommercial,
+    ];
+
+    const matched = parsed.items.map((item: { model: string }) => {
+      const model = item.model;
+      const found = toSearch.find((arr) => arr.find((i) => i.Model === model));
+      return {
+        ...item,
+        eligible: found ? "Yes" : "No",
+      };
+    });
+
+    setResponse(JSON.stringify(matched, null, 2));
   };
 
   const responseTrimmed = response.replace(/&#013; &#010;$/, "");
-  // const quoteUploaded =
-  //   document.getElementById("quote-upload") !== null &&
-  //   (document.getElementById("quote-upload") as HTMLInputElement).value !== "";
-
-  useEffect(() => {
-    const makeWorker = async () => {
-      const worker = await createWorker({
-        logger: (m) => {
-          console.log(m);
-          setProgress(Math.round(m.progress * 100));
-        },
-      });
-      setWorker(worker);
-    };
-    makeWorker();
-  }, []);
-
-  const convertImageToText = useCallback(async () => {
-    if (!imageData || !worker) return;
-    await worker.load();
-    await worker.loadLanguage("eng");
-    await worker.initialize("eng");
-    const {
-      data: { text },
-    } = await worker.recognize(imageData);
-    setQuote(text);
-  }, [imageData, worker]);
-
-  useEffect(() => {
-    convertImageToText();
-  }, [convertImageToText, imageData]);
 
   const handleQuoteUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     // Handle file upload, process text out of image with Tesseract, store to quote variable and localStorage.
@@ -257,6 +279,13 @@ export default function ClientSection() {
           onClick={(e) => infoNeededFor5695(e)}
         >
           Form 5695 &rarr;
+        </button>
+        <button
+          disabled={loading || !quote}
+          className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
+          onClick={(e) => listAllThings(e)}
+        >
+          List all things &rarr;
         </button>
         <button
           disabled={loading || !customSystemPrompt}

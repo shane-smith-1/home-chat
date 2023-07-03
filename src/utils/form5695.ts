@@ -1,4 +1,4 @@
-export const form5695 = `Form 5695
+export const form5695 = `<begin Form 5695>
 Department of the Treasury
 Internal Revenue Service
 Residential Energy Credits
@@ -89,13 +89,13 @@ improvement credit . . . . . . . . . . . . . . . . . . . . . . . . . . . 27
 Limit Worksheet (see instructions) . . . . . . . . . . . . . . . . . . . . . . . 29
 30 Energy efficient home improvement credit. Enter the smaller of line 28 or line 29. Also include this
 amount on Schedule 3 (Form 1040), line 5 . . . . . . . . . . . . . . . . . . . . 30
-Form 5695 (2022)`;
+Form 5695 (2022)<end>`;
 
-export const instructionsForm5695 = `General Instructions
+export const instructionsForm5695 = `<begin instructions for Form 5695>
 Future Developments
 For the latest information about developments related to Form 5695 and its instructions, such as legislation enacted after they were published, go to IRS.gov/Form5695.
 
-What’s New
+What's New
 Residential clean energy credit. The residential energy efficient property credit is now the residential clean energy credit. The credit rate for property placed in service in 2022 through 2032 is 30%.
 Energy efficient home improvement credit. The nonbusiness energy property credit is now the energy efficient home improvement credit. The credit is extended to property placed in service through December 31, 2022.
 Purpose of Form
@@ -236,7 +236,7 @@ Residential Clean Energy Credit Limit Worksheet—Line 14
 * If applicable.
 ** Include the amount from Schedule 8812 (Form 1040), Credit Limit Worksheet B, line 14, instead of the amount from Form 1040, 1040-SR, or 1040-NR, line 19, if the instructions for Schedule 8812 (Form 1040) direct you to complete Credit Limit Worksheet B.
  
-Manufacturer’s certification. For purposes of taking the credit, you can rely on the manufacturer’s certification, in writing, that a product is qualifying property for the credit. Don't attach the certification to your return. Keep it for your records.
+Manufacturer's certification. For purposes of taking the credit, you can rely on the manufacturer's certification, in writing, that a product is qualifying property for the credit. Don't attach the certification to your return. Keep it for your records.
 Line 16
 If you can't use all of the credit because of the tax liability limit (that is, line 14 is less than line 13), you can carry the unused portion of the credit to 2023.
 
@@ -306,7 +306,7 @@ Window Expense Worksheet—Line 19f
 17.	 	Enter the amount from your 2021 Form 5695, line 19d	17.	 	_____
 18.	 	Add lines 1, 2, and 6 through 17. Also enter this amount on Form 5695, line 19f	18.	 	 
  
-Manufacturer’s certification. For purposes of taking the credit, you can rely on a manufacturer’s certification in writing that a building envelope component is an eligible building envelope component. Don't attach the certification to your return. Keep it for your records.
+Manufacturer's certification. For purposes of taking the credit, you can rely on a manufacturer's certification in writing that a building envelope component is an eligible building envelope component. Don't attach the certification to your return. Keep it for your records.
 Lines 22a Through 22c
 This is an Image: taxtip.gifAlso include on lines 22a through 22c any labor costs properly allocable to the onsite preparation, assembly, or original installation of the property.
 
@@ -323,7 +323,7 @@ Don't enter more than $150 on line 22b.
 Line 22c. Enter the amounts you paid for an advanced main air circulating fan used in a natural gas, propane, or oil furnace that has an annual electricity use of no more than 2% of the total annual energy use of the furnace (as determined in the standard Department of Energy test procedures).
 Don't enter more than $50 on line 22c.
 
-Manufacturer’s certification. For purposes of taking the credit, you can rely on a manufacturer’s certification in writing that a product is qualified energy property. Don't attach the certification to your return. Keep it for your records.
+Manufacturer's certification. For purposes of taking the credit, you can rely on a manufacturers certification in writing that a product is qualified energy property. Don't attach the certification to your return. Keep it for your records.
 Line 25
 If the rules discussed earlier for joint occupancy apply, cross out the preprinted $500 on line 25, and enter on line 25 the smaller of:
 
@@ -345,4 +345,4 @@ Energy Efficient Home Improvement Credit Limit Worksheet—Line 29
  	 	+ Nonrefundable Education Credits, Schedule 3 (Form 1040), line 3	 	_____
  	 	+ Retirement Savings Contributions Credit, Schedule 3 (Form 1040), line 4	 	_____
  	 	Note. Enter the total of the preceding credit(s)/adjustment(s), only if allowed and taken on your 2022 income tax return. Not all credits/adjustments are available for all years nor for all filers. See the instructions for your 2022 income tax return.	2.	 
-3.	 	Subtract line 2 from line 1. Also enter this amount on Form 5695, line 29. If zero or less, enter ‐0‐ on Form 5695, lines 29 and 30`;
+3.	 	Subtract line 2 from line 1. Also enter this amount on Form 5695, line 29. If zero or less, enter 0 on Form 5695, lines 29 and 30 <end>`;
