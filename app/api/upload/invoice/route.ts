@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runDocAI } from "@/utils/doc_ai_process_invoice";
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
 
