@@ -12,19 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 */
-import React from 'react';
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import PropTypes from 'prop-types';
+import React from "react";
+import {
+  Dialog,
+  Button,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  DialogTitle,
+} from "@material-ui/core";
+import PropTypes from "prop-types";
 
 function ErrorDialog(props) {
-
   if (this.props.open) {
-    console.log(`Error logging:`)
+    console.log(`Error logging:`);
     console.dir(props.error);
   }
   return (
@@ -34,7 +35,9 @@ function ErrorDialog(props) {
         <DialogContentText>
           An error has been detected
           <br />
-          {(!props.error && !props.error.message) ? "No Message" : props.error.message}
+          {!props.error && !props.error.message
+            ? "No Message"
+            : props.error.message}
         </DialogContentText>
       </DialogContent>
       <DialogActions>
@@ -47,9 +50,9 @@ function ErrorDialog(props) {
 } // ErrorDialog
 
 ErrorDialog.propTypes = {
-  'open': PropTypes.bool.isRequired,
-  'onClose': PropTypes.func.isRequired,
-  'error': PropTypes.object.isRequired
-}
+  open: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  error: PropTypes.object.isRequired,
+};
 
 export default ErrorDialog;
