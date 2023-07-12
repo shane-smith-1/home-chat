@@ -9,6 +9,8 @@ import {
   gasTankless,
   gasResiCommercial,
 } from "./eligible_items/gas_hot_water";
+import mime from "mime";
+import { fileTypeFromBuffer, fileTypeFromFile } from "file-type";
 
 const GOOGLE_SERVICE_KEY =
   (process.env.GOOGLE_APPLICATION_CREDENTIALS_1 || "") +
@@ -39,12 +41,13 @@ export async function runDocAI(file: Buffer, returnAll = false) {
     // projects/project-id/locations/location/processor/processor-id
     // You must create new processors in the Cloud Console first
     const name = `projects/${projectId}/locations/${location}/processors/${processorId}`;
+    const fileType = await fileTypeFromBuffer(file);
 
     const request = {
       name,
       rawDocument: {
         content: file.toString("base64"),
-        mimeType: "application/pdf",
+        mimeType: fileType?.mime,
       },
       skipHumanReview: true,
       //   fieldMask: F "document.entities",

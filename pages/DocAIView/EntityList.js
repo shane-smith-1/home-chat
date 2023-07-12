@@ -31,7 +31,7 @@ function EntityList(props) {
   }, [props.hilight]);
 
   return (
-    <Box sx={{ height: "800px", width: "300px", overflow: "auto" }}>
+    <div>
       {
         // We get the entities and then copy them into a new array.
         // We next sort the array.  Since the sorting is in place and
@@ -56,7 +56,7 @@ function EntityList(props) {
             );
           })
       }
-    </Box>
+    </div>
   );
 } // EntityList
 

@@ -1,11 +1,11 @@
-import XLSX from "xlsx";
+// import XLSX from "xlsx";
 
-// Function to read an excel sheet at given location, parse the third row of the sheet for the column names, and return an array of objects with the column names as keys and the values as the values.
-export const excelSheetToJSON = (path: string) => {
-  const workbook = XLSX.readFile(path);
-  const sheetName = workbook.SheetNames[0];
-  const sheet = workbook.Sheets[sheetName];
-};
+// // Function to read an excel sheet at given location, parse the third row of the sheet for the column names, and return an array of objects with the column names as keys and the values as the values.
+// export const excelSheetToJSON = (path: string) => {
+//   const workbook = XLSX.readFile(path);
+//   const sheetName = workbook.SheetNames[0];
+//   const sheet = workbook.Sheets[sheetName];
+// };
 
 export const gasTankless = [
   {

@@ -1,3 +1,5 @@
+"use client";
+
 /*
 # Copyright 2022, Google, Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,24 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import DrawDocument from "./DrawDocument";
 import EntityInfoDialog from "./EntityInfoDialog";
 import PageSelector from "./PageSelector";
 import NoData from "./NoData";
-import { Box } from "@mui/material";
 import PropTypes from "prop-types";
 import EntityList from "./EntityList";
-
-/**
- * props
- * * data - The Document object from the JSON
- */
-
-function toBase64(arr) {
-  //arr = new Uint8Array(arr) if it's an ArrayBuffer
-  return btoa(arr.reduce((data, byte) => data + String.fromCharCode(byte), ""));
-}
+import { toBase64 } from "./utils";
 
 function DocAIView(props) {
   const [hilight, setHilight] = useState(null);
@@ -50,55 +42,66 @@ function DocAIView(props) {
     setImageSize({ width: 0, height: 0 });
   }, [props.data]);
 
+  const [currentPage, setCurrentPage] = useState(0);
+
+  const imageData = useMemo(
+    () => toBase64(props.data.pages[currentPage].image.content.data),
+    [currentPage, props.data.pages]
+  );
+
+  useEffect(() => {
+    console.log("hello");
+
+    if (imageSize.width === 0 || imageSize.height === 0 || !imageData) {
+      // We don't know the image size.  Lets find out.
+      const img = document.createElement("img");
+      img.onload = function (event) {
+        console.log("natural:", img.naturalWidth, img.naturalHeight);
+        console.log("width,height:", img.width, img.height);
+        console.log("offsetW,offsetH:", img.offsetWidth, img.offsetHeight);
+        setImageSize({ width: img.width, height: img.height });
+      };
+      img.src = `data:image/png;base64,${imageData}`;
+    }
+  }, [imageData]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!props.data) {
     return <NoData />;
   }
 
-  //console.dir(props.data);
-  const imageData = toBase64(props.data.pages[0].image.content.data);
-  if (imageSize.width === 0 || imageSize.height === 0 || !imageData) {
-    // We don't know the image size.  Lets find out.
-    const img = document.createElement("img");
-    img.onload = function (event) {
-      console.log("natural:", img.naturalWidth, img.naturalHeight);
-      console.log("width,height:", img.width, img.height);
-      console.log("offsetW,offsetH:", img.offsetWidth, img.offsetHeight);
-      setImageSize({ width: img.width, height: img.height });
-    };
-    img.src = `data:image/png;base64,${imageData}`;
-    return <NoData />;
-  }
-  //const imageSize = { width: props.data.pages[0].image.width, height: props.data.pages[0].image.height }
-  const drawDocument = (
-    <DrawDocument
-      imageData={imageData}
-      imageSize={imageSize}
-      entities={props.data.entities}
-      hilight={hilight}
-      entityOnClick={entityOnClick}
-    />
-  );
-
   return (
-    <Box sx={{ display: "flex", width: "100%", height: "100%" }}>
-      <EntityList
-        data={props.data}
-        onInfoClick={onInfoClick}
-        entityOnClick={entityOnClick}
-        hilight={hilight}
-      />
-      <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "row" }}>
-        <Box sx={{ flexGrow: 1 }}>{drawDocument}</Box>
-        <Box>
-          <PageSelector data={props.data}></PageSelector>
-        </Box>
-      </Box>
+    <div className="flex w-full h-[800px]">
+      <div className="min-w-[200px] max-w-[350px] overflow-auto">
+        <EntityList
+          data={props.data}
+          onInfoClick={onInfoClick}
+          entityOnClick={entityOnClick}
+          hilight={hilight}
+        />
+      </div>
+      <div className="flex-grow hidden xs:flex">
+        <div className="flex-grow">
+          <DrawDocument
+            imageData={imageData}
+            imageSize={imageSize}
+            entities={props.data.entities.slice()}
+            hilight={hilight}
+            entityOnClick={entityOnClick}
+          />
+        </div>
+        <div className="overflow-auto">
+          <PageSelector
+            data={props.data}
+            onPageChange={setCurrentPage}
+          ></PageSelector>
+        </div>
+      </div>
       <EntityInfoDialog
         open={entityInfoDialogOpen}
         close={() => setEntityInfoDialogOpen(false)}
         entity={entityInfoDialogEntity}
       ></EntityInfoDialog>
-    </Box>
+    </div>
   );
 } // DocAIView
 

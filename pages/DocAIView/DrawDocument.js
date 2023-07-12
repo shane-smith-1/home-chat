@@ -95,10 +95,10 @@ function DrawDocument(props) {
     if (viewerRef.current) {
       viewerRef.current.fitToViewer();
     }
-  }, []);
+    doResize();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Handle a calculation of the container size.
-  useEffect(() => {
+  const doResize = () => {
     if (ref1.current) {
       const br = ref1.current.getBoundingClientRect();
       const w = ref1.current.offsetWidth;
@@ -108,11 +108,35 @@ function DrawDocument(props) {
           svgContainerSize.width
         }x${svgContainerSize.height} ${JSON.stringify(br)}`
       );
-      if (w !== svgContainerSize.width || h !== svgContainerSize.height) {
+      if (
+        Math.abs(w - svgContainerSize.width) > 10 ||
+        Math.abs(h - svgContainerSize.height) > 10
+      ) {
         setSvgContainerSize({ width: w, height: h });
+        console.log("Resizing SVG");
       }
     }
-  }, [svgContainerSize.width, svgContainerSize.height]);
+  };
+
+  // Handle a calculation of the container size.
+  // useEffect(() => {
+  //   if (ref1.current) {
+  //     const br = ref1.current.getBoundingClientRect();
+  //     const w = ref1.current.offsetWidth;
+  //     const h = ref1.current.offsetHeight;
+  //     console.log(
+  //       `useEffect: NewSize:: ${w}x${h}, currentSize: ${
+  //         svgContainerSize.width
+  //       }x${svgContainerSize.height} ${JSON.stringify(br)}`
+  //     );
+  //     // if (
+  //     //   Math.abs(w - svgContainerSize.width) > 10 ||
+  //     //   Math.abs(h - svgContainerSize.height) > 10
+  //     // ) {
+  //     //   setSvgContainerSize({ width: w, height: h });
+  //     // }
+  //   }
+  // }, [svgContainerSize.width, svgContainerSize.height]);
 
   // Handle a window resize.
   useEffect(() => {
@@ -128,9 +152,11 @@ function DrawDocument(props) {
       */
       //setRefreshState(refreshState+1)
 
+      doResize();
+
       //console.log(`Setting the size to ${minSize.width}x${minSize.height}`)
-      setSvgContainerSize(minSize); // The window has resized.  Set the Svg size to something small that will force a resize.
-    }, 1000);
+      // setSvgContainerSize(minSize); // The window has resized.  Set the Svg size to something small that will force a resize.
+    }, 50);
 
     //console.log("Adding window resize handler")
     window.addEventListener("resize", debouncedHandleResize);
@@ -139,7 +165,7 @@ function DrawDocument(props) {
       //console.log("Removing window resize handler")
       window.removeEventListener("resize", debouncedHandleResize);
     };
-  }, [minSize]);
+  }, [minSize]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
    * Invoked when an entity on the SVG is cliecked.
@@ -219,7 +245,7 @@ function DrawDocument(props) {
                 <EntityHilight
                   key={entity.id}
                   imageSize={imageSizeSmaller}
-                  entity={entity}
+                  entity={{ ...entity }}
                   onClick={entityClick}
                   hilight={props.hilight}
                 />

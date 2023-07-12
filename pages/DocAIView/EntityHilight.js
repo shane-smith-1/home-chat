@@ -68,7 +68,7 @@ function EntityHilight(props) {
     }
   }
   let points = "";
-  props.entity.pageAnchor.pageRefs[0].boundingPoly?.normalizedVertices?.forEach(
+  props.entity.pageAnchor?.pageRefs?.[0]?.boundingPoly?.normalizedVertices?.forEach(
     (point) => {
       if (points.length !== 0) {
         points += " ";

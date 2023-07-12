@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useCallback, useEffect, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { form5695, instructionsForm5695 } from "../src/utils/form5695";
 import classNames from "classnames";
 import { thingsEligibleForTaxCredit } from "../app/CreditEligible";
@@ -14,18 +14,29 @@ import {
   gasResiCommercial,
 } from "@/utils/eligible_items/gas_hot_water";
 import useLocalStorage from "use-local-storage";
+import { CopyAll, Info, StopCircle } from "@mui/icons-material";
+import { toast } from "react-hot-toast";
 
-export default function QuoteQuestions() {
+interface Props {
+  quoteText: string;
+  hideQuoteInput?: boolean;
+}
+const federalCreditLink = "https://www.irs.gov/pub/irs-pdf/f5695.pdf";
+
+export default function QuoteQuestions({ quoteText, hideQuoteInput }: Props) {
   const [loading, setLoading] = useState(false);
-  const [quote, setQuote] = useState("");
+  const [quote, setQuote] = useState(quoteText);
   const [customSystemPrompt, setCustomSystemPrompt] = useState("");
-  const [response, setResponse] = useState<String>("Response will be here");
+  const [response, setResponse] = useState<String>(
+    "Response will be here. Ask a question."
+  );
   const [imageData, setImageData] = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
+  const [abortController, setAbortController] = useState(new AbortController());
 
   useEffect(() => {
     // Check if localStorage is available, if so, set quote and customSystemPrompt
-    if (typeof Storage !== "undefined") {
+    if (typeof Storage !== "undefined" && !quote) {
       const quote = localStorage.getItem("quote");
       if (quote) {
         setQuote(quote);
@@ -36,7 +47,12 @@ export default function QuoteQuestions() {
         setCustomSystemPrompt(customSystemPrompt);
       }
     }
-  }, []);
+    if (quote && quoteText) {
+      console.log("Quote text size: ", quoteText.length);
+
+      explainQuote();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const generateResponse = async (prompt: string, temperature?: number) => {
     setResponse("");
@@ -51,6 +67,7 @@ export default function QuoteQuestions() {
         prompt,
         temperature,
       }),
+      signal: abortController.signal,
     });
 
     if (!response.ok) {
@@ -79,12 +96,10 @@ export default function QuoteQuestions() {
     return res;
   };
 
-  const askQuestion = async (
-    e: React.MouseEvent<HTMLButtonElement>,
-    question: string,
-    temperature?: number
-  ) => {
-    e.preventDefault();
+  const askQuestion = async (question: string, temperature?: number) => {
+    // if (e) {
+    //   e.preventDefault();
+    // }
     setResponse("");
     setLoading(true);
     return await generateResponse(question, temperature);
@@ -94,48 +109,54 @@ export default function QuoteQuestions() {
     return `<start home repair quote> ${quote} <end home repair quote> prompt: ${prompt} Skip all precations and warnings that you can.`;
   };
 
-  const explainQuote = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const explainQuote = async () => {
     const prompt =
       "Explain the home repair quote above in simple terms to the owner of the home.";
-    askQuestion(e, getQuotePromptInput(prompt));
+    askQuestion(getQuotePromptInput(prompt));
   };
 
-  const judgeQuote = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const judgeQuote = async () => {
     const prompt =
       "Is this a fair quote? Anything else I should consider? Add a newline after each question.";
-    askQuestion(e, getQuotePromptInput(prompt));
+    askQuestion(getQuotePromptInput(prompt));
   };
 
-  const evalEfficiency = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const evalEfficiency = async () => {
     const prompt =
       "How energy and monthly bill efficient is the appliance(s) quoted going to be, compared to other options? The quote might not talk about efficiency, but use the context of what is going to installed to determine. Suggest more green and/or energy efficient alternatives if possible. Be specific. For example, talk about how a heat pump solution is probably going to cost less long-term.";
-    askQuestion(e, getQuotePromptInput(prompt));
+    askQuestion(getQuotePromptInput(prompt));
   };
 
-  const customPromptWithQuote = async (
-    e: React.MouseEvent<HTMLButtonElement>
-  ) => {
-    e.preventDefault();
+  const customPromptWithQuote = async () => {
+    // e.preventDefault();
     setResponse("");
     setLoading(true);
-    askQuestion(e, getQuotePromptInput(customSystemPrompt));
+    askQuestion(getQuotePromptInput(customSystemPrompt));
   };
 
-  const listQuestions = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const listQuestions = async () => {
     const prompt =
-      "List 5 questions an expert with an eye for detail would ask the contractor about this quote? Be as pointed as possible. Newline after each question.";
-    askQuestion(e, getQuotePromptInput(prompt));
+      "List 5 questions an expert with an eye for detail would ask the contractor about this quote? Be as pointed as possible. Newline after each question. If 5 can't be made that make sense specific to the quote, don't force it. Its okay to return fewer or even none, with a note explaining why. Don't make anything up that isn't in the quote.\n";
+    askQuestion(getQuotePromptInput(prompt));
   };
 
-  const infoNeededFor5695 = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const infoNeededFor5695 = async () => {
     const prompt =
+      "Here is a tax form to fill out: " +
       form5695 +
+      "Here are the instructions:" +
       instructionsForm5695 +
-      "Fillout this form given the info found in the quote. Output a simple yes and no where possible. Assume no prior work to the home this tax year. Output in JSON with the key being the line number in the form.";
-    askQuestion(e, getQuotePromptInput(prompt));
+      "\n.end of instructions." +
+      "Fillout this form given the info found in the following quote. Output a simple yes and no where possible. Assume no prior work to the home this tax year. Output in JSON with the key being the line number in the form.\n";
+    askQuestion(getQuotePromptInput(prompt));
   };
 
-  const listAllThings = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const translateToSpanish = async () => {
+    const prompt = "Translate the following quote into Spanish. \n";
+    askQuestion(getQuotePromptInput(prompt));
+  };
+
+  const listAllThings = async () => {
     const prompt = `You are going to return a valid JSON object, starting with a { and ending with a }. It will contain an items array. For the included quote, find and return all work items that possibly fit into one of these categories: <categories>${thingsEligibleForTaxCredit
       .join(" - ")
       .trim()}<end categories>.
@@ -155,7 +176,7 @@ export default function QuoteQuestions() {
       category_confidence: number, (how confident are you that this item is in the category above, between 0.00-1.00)
     }
     `;
-    const listOfItems = await askQuestion(e, getQuotePromptInput(prompt), 0);
+    const listOfItems = await askQuestion(getQuotePromptInput(prompt), 0);
     if (!listOfItems) return;
     const parsed = JSON.parse("{" + listOfItems);
     // For each items in the list, search the following arrays for a match of model.
@@ -198,103 +219,122 @@ export default function QuoteQuestions() {
     reader.readAsDataURL(file);
   }, []);
 
+  const onCopyResponse = useCallback(() => {
+    navigator.clipboard.writeText(responseTrimmed);
+    toast.success("Copied to clipboard");
+  }, [responseTrimmed]);
+
   return (
     <div className="mx-8 flex w-full flex-row flex-wrap justify-center gap-8">
-      <div className="mx-3 w-full max-w-xl">
-        <input
-          type="file"
-          className="cursor-pointer font-bold"
-          id="quote-upload"
-          name=""
-          onChange={handleQuoteUpload}
-        />
-
-        <button
-          onClick={() => {
-            const inputEl = document.getElementById("quote-upload");
-            if (inputEl) {
-              (inputEl as HTMLInputElement).value = "";
-            }
-          }}
-        >
-          remove
-        </button>
-
-        {progress < 100 && progress > 0 && (
+      <div className="mx-3 w-full max-w-lg xs:min-w-md">
+        {!hideQuoteInput && (
           <div>
-            <div className="progress-label">Progress ({progress}%)</div>
-            <div className="progress-bar">
-              <div className="progress" style={{ width: `${progress}%` }}></div>
-            </div>
+            <input
+              type="file"
+              className="cursor-pointer font-bold"
+              id="quote-upload"
+              name=""
+              onChange={handleQuoteUpload}
+            />
+
+            <button
+              onClick={() => {
+                const inputEl = document.getElementById("quote-upload");
+                if (inputEl) {
+                  (inputEl as HTMLInputElement).value = "";
+                }
+              }}
+            >
+              remove
+            </button>
+
+            {progress < 100 && progress > 0 && (
+              <div>
+                <div className="progress-label">Progress ({progress}%)</div>
+                <div className="progress-bar">
+                  <div
+                    className="progress"
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+
+            {/* <img id="selected-image" src="" /> */}
+            <div className="my-2 text-center font-bold">or</div>
+            <div className="mb-2 font-bold">Paste your quote here</div>
+            <textarea
+              value={quote}
+              onChange={(e) => {
+                setQuote(e.target.value);
+                localStorage.setItem("quote", e.target.value);
+              }}
+              rows={10}
+              // maxLength={200}
+              className="focus:ring-neu w-full rounded-md border border-neutral-400
+         p-4 text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:border-neutral-900"
+              placeholder={"No formatting needed"}
+            />
           </div>
         )}
 
-        {/* <img id="selected-image" src="" /> */}
-        <div className="my-2 text-center font-bold">or</div>
-        <div className="mb-2 font-bold">Paste your quote here</div>
-        <textarea
-          value={quote}
-          onChange={(e) => {
-            setQuote(e.target.value);
-            localStorage.setItem("quote", e.target.value);
-          }}
-          rows={10}
-          // maxLength={200}
-          className="focus:ring-neu w-full rounded-md border border-neutral-400
-         p-4 text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:border-neutral-900"
-          placeholder={"No formatting needed"}
-        />
-
-        <button
+        <div className="flex flex-row flex-wrap">
+          <button
+            disabled={loading || !quote}
+            className="m-2 rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
+            onClick={() => explainQuote()}
+          >
+            Explain it to me &rarr;
+          </button>
+          <button
+            disabled={loading || !quote}
+            className="m-2 rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
+            onClick={() => judgeQuote()}
+          >
+            Is this a fair quote? &rarr;
+          </button>
+          <button
+            disabled={loading || !quote}
+            className="m-2 rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
+            onClick={() => listQuestions()}
+          >
+            List 5 expert questions &rarr;
+          </button>
+          {/* <button
           disabled={loading || !quote}
-          className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
-          onClick={(e) => explainQuote(e)}
-        >
-          Explain it to me &rarr;
-        </button>
-        <button
-          disabled={loading || !quote}
-          className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
-          onClick={(e) => judgeQuote(e)}
-        >
-          Is this a fair quote? &rarr;
-        </button>
-        <button
-          disabled={loading || !quote}
-          className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
-          onClick={(e) => listQuestions(e)}
-        >
-          List 5 expert questions &rarr;
-        </button>
-        <button
-          disabled={loading || !quote}
-          className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
-          onClick={(e) => evalEfficiency(e)}
+          className="m-2 rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
+          onClick={() => evalEfficiency()}
         >
           How energy efficient is the appliance? &rarr;
-        </button>
-        <button
-          disabled={loading || !quote}
-          className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
-          onClick={(e) => infoNeededFor5695(e)}
-        >
-          Form 5695 &rarr;
-        </button>
-        <button
-          disabled={loading || !quote}
-          className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
-          onClick={(e) => listAllThings(e)}
-        >
-          List all things &rarr;
-        </button>
-        <button
-          disabled={loading || !customSystemPrompt}
-          className="my-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
-          onClick={(e) => customPromptWithQuote(e)}
-        >
-          Custom &rarr;
-        </button>
-
+        </button> */}
+          <div className="flex w-fit items-center">
+            <button
+              disabled={loading || !quote}
+              className="m-2 rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80 whitespace-nowrap"
+              onClick={() => infoNeededFor5695()}
+            >
+              Get tax credit &rarr;
+            </button>
+            <a href={federalCreditLink} target="_blank">
+              <Info />
+            </a>
+          </div>
+          <button
+            disabled={loading || !quote}
+            className="m-2 rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
+            onClick={() => listAllThings()}
+          >
+            List all products &rarr;
+          </button>
+          <button
+            disabled={loading || !quote}
+            className="m-2 rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
+            onClick={() => translateToSpanish()}
+          >
+            Traducir al español &rarr;
+          </button>
+        </div>
+        <div className="mt-2 mb-3">-or-</div>
         <textarea
           value={customSystemPrompt}
           onChange={(e) => {
@@ -305,24 +345,52 @@ export default function QuoteQuestions() {
           className="focus:ring-neu w-full rounded-md border border-neutral-400
          p-4 text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:border-neutral-900"
           placeholder={
-            "This is the behind-the-scenes prompt that the AI will use to generate a response."
+            "What would you like to ask? (e.g. what is the SEER rating, or, what is a heat pump?)"
           }
         />
+        <button
+          disabled={loading || !customSystemPrompt}
+          className="m-2 w-full rounded-xl bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-black/80"
+          onClick={() => customPromptWithQuote()}
+        >
+          Ask anything &rarr;
+        </button>
       </div>
-      <div className="mx-3 w-full max-w-xl">
-        <div className="mb-2 font-bold">
-          Response {loading ? "loading..." : ""}
+      <div className="mx-3 w-full max-w-lg xs:min-w-md">
+        <div className="flex gap-2 items-center mb-2">
+          <h2 className="font-bold">Response</h2>
+          {!loading && responseTrimmed && (
+            <button onClick={onCopyResponse}>
+              <CopyAll />
+            </button>
+          )}
+          {loading && (
+            <button
+              onClick={() => {
+                abortController.abort();
+                setLoading(false);
+                setAbortController(new AbortController());
+              }}
+            >
+              <StopCircle />
+            </button>
+          )}
         </div>
-        {responseTrimmed && (
+        {responseTrimmed ? (
           <pre
             className={classNames(
-              !responseTrimmed.includes("{") && "whitespace-normal"
+              "sm:max-h-[450px] sm:overflow-auto",
+              !responseTrimmed.includes("{") && "whitespace-break-spaces"
             )}
           >
             <div className="rounded-xl border bg-white p-4 text-black shadow-md transition hover:bg-gray-100">
               {responseTrimmed}
             </div>
           </pre>
+        ) : (
+          <div className="rounded-xl border bg-white p-4 text-black shadow-md transition hover:bg-gray-100">
+            Response will appear here
+          </div>
         )}
       </div>
     </div>
