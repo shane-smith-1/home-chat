@@ -32,36 +32,39 @@ export default function InvoiceUploader() {
   //   }
   // }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const uploadToCloud = async (file: File) => {
-    setDocAI(null);
-    setUploading(true);
-    toast.success("Uploading");
+  const uploadToCloud = useCallback(
+    async (file: File) => {
+      setDocAI(null);
+      setUploading(true);
+      toast.success("Uploading");
 
-    let formData = new FormData();
-    formData.append("file", file!);
+      let formData = new FormData();
+      formData.append("file", file!);
 
-    const response = await fetch("/api/upload/invoice", {
-      method: "POST",
-      body: formData,
-    });
+      const response = await fetch("/api/upload/invoice", {
+        method: "POST",
+        body: formData,
+      });
 
-    setUploading(false);
+      setUploading(false);
 
-    if (!response.ok) {
-      //   toast.error("Something went wrong uploading the file");
-      return;
-    }
+      if (!response.ok) {
+        //   toast.error("Something went wrong uploading the file");
+        return;
+      }
 
-    const data = await (response.json() as unknown as {
-      entities: any;
-      items: any;
-    });
-    const pretty = JSON.stringify(data, null, 4);
-    setDocAILS(pretty);
-    setDocAI(data);
-    // console.log(data);
-    // toast.success("Uploaded and processed, check it out");
-  };
+      const data = await (response.json() as unknown as {
+        entities: any;
+        items: any;
+      });
+      const pretty = JSON.stringify(data, null, 4);
+      setDocAILS(pretty);
+      setDocAI(data);
+      // console.log(data);
+      // toast.success("Uploaded and processed, check it out");
+    },
+    [setDocAILS]
+  );
 
   // Iterate through all of the keys of docAI recursively, and only keep keys with string values. Execption is keep keys of 'confidence' despite them being numbers. Then, join all of the values together into a new object, keeping the nesting.
   const reducer = (acc: any, key: string) => {

@@ -9,8 +9,7 @@ import {
   gasTankless,
   gasResiCommercial,
 } from "./eligible_items/gas_hot_water";
-import mime from "mime";
-import { fileTypeFromBuffer, fileTypeFromFile } from "file-type";
+import { fileTypeFromBuffer } from "file-type";
 
 const GOOGLE_SERVICE_KEY =
   (process.env.GOOGLE_APPLICATION_CREDENTIALS_1 || "") +

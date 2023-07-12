@@ -17,6 +17,7 @@ import { useState } from "react";
 import { Tabs, Tab, Box } from "@mui/material";
 import PropTypes from "prop-types";
 import { toBase64 } from "./utils";
+import Image from "next/image";
 
 const desiredImageWidth = 80; // Desired width of the mini page image
 /**
@@ -59,7 +60,7 @@ function PageSelector(props) {
         )}`;
         let labelNode = (
           <Box>
-            <img
+            <Image
               src={imageData}
               style={{ width: `${desiredImageWidth}px` }}
               alt="page"
