@@ -49,7 +49,7 @@ import {
   TOOL_NONE,
   POSITION_NONE,
 } from "react-svg-pan-zoom";
-import { imageScale } from "./utils";
+import { imageScale } from "../../utils/utils";
 import PropTypes from "prop-types";
 
 /**

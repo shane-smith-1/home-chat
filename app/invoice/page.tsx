@@ -1,5 +1,5 @@
 // import toast, { Toaster } from "react-hot-toast";
-import InvoiceUploader from "../../pages/InvoiceUploader";
+import InvoiceUploader from "../../src/components/InvoiceUploader";
 
 export default function InvoiceScanner() {
   return (

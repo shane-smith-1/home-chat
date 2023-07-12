@@ -21,7 +21,7 @@ import PageSelector from "./PageSelector";
 import NoData from "./NoData";
 import PropTypes from "prop-types";
 import EntityList from "./EntityList";
-import { toBase64 } from "./utils";
+import { toBase64 } from "../../utils/utils";
 
 function DocAIView(props) {
   const [hilight, setHilight] = useState(null);

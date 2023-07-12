@@ -8,7 +8,7 @@ import useLocalStorage from "use-local-storage";
 import toast, { Toaster } from "react-hot-toast";
 // import { PDFViewer } from "./PDFViewer";
 import DocAIView from "./DocAIView/DocAIView";
-import ruderman_mini_splits from "../data/invoices/ruderman_mini_splits.json";
+import ruderman_mini_splits from "../../data/invoices/ruderman_mini_splits.json";
 import QuoteQuestions from "./QuoteQuestions";
 
 interface Props {}

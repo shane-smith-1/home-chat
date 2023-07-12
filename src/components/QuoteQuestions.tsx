@@ -1,9 +1,9 @@
 "use client";
 
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { form5695, instructionsForm5695 } from "../src/utils/form5695";
+import { form5695, instructionsForm5695 } from "../utils/form5695";
 import classNames from "classnames";
-import { thingsEligibleForTaxCredit } from "../app/CreditEligible";
+import { thingsEligibleForTaxCredit } from "../../app/CreditEligible";
 import {
   twoFourtyVolt,
   oneTwentyVolt,
