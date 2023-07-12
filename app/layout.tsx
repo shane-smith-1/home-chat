@@ -1,11 +1,12 @@
 import { Inter } from "next/font/google";
 import React from "react";
+import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Home Chat",
-  description: "Upload quote, get it analzyed, ask questions.",
+  title: "AvyUp",
+  description: "Upload a quote, get it analzyed, ask questions.",
 };
 
 export default function RootLayout({
@@ -15,7 +16,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      {/* <Toaster position="bottom-center" /> */}
       <body className={inter.className}>{children}</body>
     </html>
   );
